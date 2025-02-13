@@ -3,20 +3,25 @@ d crosswalk: module to recode variable based on crosswalk table (bulk recoding)
 d 
 d Author: Ben Jann, University of Bern, ben.jann@unibe.ch
 d
-d Distribution-Date: 20250206
+d Distribution-Date: 20250213
 f _cwcasefcn_egp68.sthlp
 f _cwfcn_isco88_to_mps.sthlp
+f _cwfcn_labels_soc18.sthlp
 f _cwfcn_isco88_3_to_isco88_2.sthlp
 f _cwfcn_isco08_3_to_isco08_2.sthlp
 f _cwfcn_isco08_to_oep.sthlp
 f _cwfcn_isco08_to_isco88.sthlp
 f _cwfcn_isco08_to_isco08_2.sthlp
+f _cwfcn_soc10_to_isco08.sthlp
 f _cwcasefcn_egp.sthlp
+f _cwfcn_ilo_isco08_to_isco88.sthlp
 f _cwfcn_isco68_to_siops.sthlp
 f _cwfcn_labels_isco08_2.sthlp
 f _cwfcn_isco08_to_treiman.sthlp
 f _cwfcn_isco08_to_oesch8.sthlp
+f _cwfcn_soc18_to_soc10.sthlp
 f _cwfcn_labels_esec.sthlp
+f _cwfcn_soc00_to_isco88.sthlp
 f _cwfcn_isco88_to_esec.sthlp
 f _cwfcn_isco88_3_to_isco88_1.sthlp
 f _cwfcn_isco88_to_oesch.sthlp
@@ -24,8 +29,11 @@ f _cwfcn_isco08_to_esec.sthlp
 f _cwfcn_isco08_to_isco08_3.sthlp
 f _cwfcn_labels_oesch5.sthlp
 f _cwfcn_isco88_2_to_oep.sthlp
+f _cwfcn_isco08_to_soc10.sthlp
 f _cwfcn_isco08_to_isco08_1.sthlp
+f _cwfcn_labels_soc00.sthlp
 f _cwfcn_labels_egp11.sthlp
+f _cwfcn_soc00_to_soc10.sthlp
 f _cwfcn_isco88_to_oesch5.sthlp
 f _cwfcn_isco08_3_to_isco08_1.sthlp
 f _cwfcn_isco68_to_treiman.sthlp
@@ -51,6 +59,8 @@ f _cwfcn_isco88_1_to_oep.sthlp
 f _cwfcn_isco08_to_oesch5.sthlp
 f _cwfcn_isco88_to_isco88_3.sthlp
 f _cwfcn_labels_isco88com_2.sthlp
+f _cwfcn_soc10_to_soc00.sthlp
+f _cwfcn_ilo_isco88_to_isco08.sthlp
 f _cwfcn_isco68_to_isco88.sthlp
 f _cwfcn_labels_isco08.sthlp
 f _cwfcn_isco88_to_oep.sthlp
@@ -62,6 +72,7 @@ f _cwfcn_isco88_to_isco08.sthlp
 f _cwfcn_labels_isco88_1.sthlp
 f _cwfcn_oesch_to_oesch8.sthlp
 f _cwfcn_isco88_to_egp.sthlp
+f _cwfcn_labels_soc10.sthlp
 f _cwfcn_isco68_to_isei.sthlp
 f _cwfcn_isco88_to_isco88com.sthlp
 f _cwfcn_labels_isco88.sthlp
@@ -74,6 +85,7 @@ f crosswalk.sthlp
 f _cwfcn_labels_isco68.sthlp
 f _cwfcn_isco08_to_iseisps.sthlp
 f _cwfcn_isco88_to_egp11.sthlp
+f _cwfcn_isco88_to_soc00.sthlp
 f _cwfcn_labels_isco88com_1.sthlp
 f _cwfcn_isco88_to_isei.sthlp
 f _cwfcn_isco88_to_isco88_2.sthlp
@@ -81,6 +93,7 @@ f _cwfcn_labels_isco88b.sthlp
 f _cwfcn_isco88_to_oesch8.sthlp
 f _cwfcn_labels_isco88com_3.sthlp
 f _cwcasefcn_oesch.sthlp
+f _cwfcn_soc10_to_soc18.sthlp
 f _cwfcn_labels_oesch.sthlp
 f _cwcasefcn_esec.sthlp
 f _cwfcn_labels_oesch8.sthlp

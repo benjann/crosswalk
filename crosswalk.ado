@@ -1,4 +1,4 @@
-*! version 1.0.0  06feb2025  Ben Jann
+*! version 1.0.1  13feb2025  Ben Jann
 
 capt mata: assert(mm_version()>=200)
 if _rc==1 exit _rc
@@ -16,25 +16,45 @@ program crosswalk
     gettoken lhs rhs : anything, parse("=")
     gettoken eq  rhs : rhs, parse("=")
     if `:list sizeof lhs'!=1 | `"`eq'"'!="=" {
-        gettoken subcmd : 0, parse(" ,")
+        gettoken subcmd rest : 0, parse(" ,")
         if `"`subcmd'"'==substr("label", 1, max(1, strlen(`"`subcmd'"'))) {
-            gettoken subcmd 0 : 0, parse(" ,")
-            _cw_label `0'
+            _cw_label `rest'
             exit
         }
         if `"`subcmd'"'==substr("define", 1, max(1, strlen(`"`subcmd'"'))) {
-            gettoken subcmd 0 : 0, parse(" ,")
-            _cw_define `0'
+            _cw_define `rest'
+            exit
+        }
+        if `"`subcmd'"'=="save" {
+            _cw_save `rest'
             exit
         }
         if `"`subcmd'"'==substr("dir", 1, max(2, strlen(`"`subcmd'"'))) {
-            gettoken subcmd 0 : 0, parse(" ,")
-            _cw_dir `0'
+            _cw_dir `rest'
+            exit
+        }
+        if `"`subcmd'"'=="drop" {
+            _cw_drop `rest'
             exit
         }
         if `"`subcmd'"'=="clear" {
-            gettoken subcmd 0 : 0, parse(" ,")
-            _cw_clear `0'
+            _cw_clear `rest'
+            exit
+        }
+        if `"`subcmd'"'=="list" {
+            _cw_list `rest'
+            exit
+        }
+        if `"`subcmd'"'=="import" {
+            _cw_import `rest'
+            exit
+        }
+        if `"`subcmd'"'=="post" {
+            _cw_post `rest'
+            exit
+        }
+        if `"`subcmd'"'=="export" {
+            _cw_export `rest'
             exit
         }
     }
@@ -257,14 +277,17 @@ program _crosswalk, rclass
     // returns
     if "`noinfo'"=="" {
         ret local levels_out: list clean levels_out
-        ret scalar r_out     = `r_out'
+        ret scalar r_out = `r_out'
     }
-    ret local case    `"`case'"'
-    ret local varname `xvar'
-    ret local newvar  `generate'
-    ret local lblset  `"`label'"'
-    ret local fcn     `"`fcn'()"'
-    ret scalar string = `str1'
+    ret local fn_casefcn `"`fn_casefcn'"'
+    ret local case       `"`case'"'
+    ret local varname    `xvar'
+    ret local newvar     `generate'
+    ret local fn_lblset  `"`fn_lblset'"'
+    ret local lblset     `"`label'"'
+    ret local fn         `"`fn'"'
+    ret local fcn        `"`fcn'()"'
+    ret scalar string    = `str1'
     if "`expandok'"!="" ret scalar N_add = `nadd'
 end
 
@@ -333,8 +356,9 @@ program _cw_case, rclass
     di as txt "(variable {bf:`generate'} generated)"
     
     // returns
-    ret local newvar  `generate'
-    ret local casefcn `"case.`fcn'()"'
+    ret local newvar     `generate'
+    ret local fn_casefcn `"`fn_casefcn'"'
+    ret local casefcn    `"case.`fcn'()"'
 end
 
 program __cw_case
@@ -342,6 +366,7 @@ program __cw_case
     tempfile tmpf
     mata: casefcn_read(st_local("fcn"), st_local("tmpf"))
     run `"`tmpf'"' `0'
+    c_local fn_casefcn `"`fn'"'
 end
 
 program _check_casefcn
@@ -383,25 +408,39 @@ program _cw_label, rclass
     }
     
     // returns
-    return local varlist  "`varlist'"
-    return local lblname  "`lblnames'"
-    return local lblset   "`label'"
+    return local varlist   "`varlist'"
+    return local lblname   "`lblnames'"
+    return local fn_lblset `"`fn_lblset'"'
+    return local lblset    "`label'"
 end
 
 program _cw_define, rclass
-    // strip () from name, if relevant
-    gettoken 0 rest : 0, parse("(")
-    if `"`rest'"'!="" {
-        gettoken args rest: rest, match(par)
-        if "`par'"==""             error 198
-        if strtrim(`"`args'"')!="" error 198
-        if `"`rest'"'!=""          error 198
-    }
-    // collect input and store table
+    _parse_fcn 0 `0' // strip () from fcn()
     syntax name
     mata: table_define(st_local("namelist"))
     di as txt "(crosswalk table {bf:`namelist'()} defined)"
     return local fcn `"`namelist'()"'
+end
+
+program _cw_save, rclass
+    _parse comma fcn 0 : 0
+    syntax [, Replace path(str) ]
+    _parse_fcn 0 `fcn' // strip () from fcn()
+    syntax name
+    local fn `"_cwfcn_`namelist'.sthlp"'
+    if `"`path'"'!="" {
+        mata: _checkdir(st_local("path"))
+        mata: st_local("fn", pathjoin(st_local("path"), st_local("fn")))
+    }
+    if "`replace'"=="" {
+        confirm new file `"`fn'"'
+    }
+    mata: mm_outsheet(st_local("fn"), table_get(st_local("namelist")),/*
+        */ "replace")
+    di as txt "(crosswalk table {bf:`namelist'()} stored in file "/*
+        */ `"{view `"`fn'"'})"'
+    return local fcn `"`namelist'()"'
+    return local fn `"`fn'"'
 end
 
 program _cw_dir, rclass
@@ -411,9 +450,84 @@ program _cw_dir, rclass
     return local fcns `"`fcns'"'
 end
 
+program _cw_drop
+    _parse_fcn 0 `0' // strip () from fcn()
+    syntax name
+    mata: table_drop(st_local("namelist"))
+end
+
 program _cw_clear
     if `"`0'"'!="" error 198
     mata: rmexternal("_CROSSWALK_DB")
+end
+
+program _cw_list, rclass
+    _parse_fcn 0 `0' // strip () from fcn()
+    syntax name
+    mata: list_table(st_local("namelist"))
+    return scalar r = `r'
+    return local fn `"`fn'"'
+end
+
+program _cw_import, rclass
+    _parse comma fcn 0 : 0
+    syntax [, clear ]
+    // strip () from fcn()
+    _parse_fcn fcn `fcn' 
+    if `"`fcn'"'!=="" {
+        di as err "name required"
+        exi 100
+    }
+    // clear option
+    if "`clear'"=="" {
+        if c(changed) error 4
+    }
+    // import fcn
+    mata: import_table(st_local("fcn"))
+    label data `"`fcn'()"'
+    describe
+    return add
+    return local fn `"`fn'"'
+end
+
+program _cw_post, rclass
+    _parse_fcn 0 `0' // strip () from fcn()
+    syntax name
+    mata: table_put(st_local("namelist"), data_to_table())
+    di as txt "(crosswalk table {bf:`namelist'()} defined)"
+    return local fcn `"`namelist'()"'
+end
+
+program _cw_export, rclass
+    _parse comma fcn 0 : 0
+    syntax [, Replace path(str) ]
+    _parse_fcn 0 `fcn' // strip () from fcn()
+    syntax name
+    local fn `"_cwfcn_`namelist'.sthlp"'
+    if `"`path'"'!="" {
+        mata: _checkdir(st_local("path"))
+        mata: st_local("fn", pathjoin(st_local("path"), st_local("fn")))
+    }
+    if "`replace'"=="" {
+        confirm new file `"`fn'"'
+    }
+    mata: mm_outsheet(st_local("fn"), data_to_table(), "replace")
+    di as txt "(crosswalk table {bf:`namelist'()} stored in file "/*
+        */ `"{view `"`fn'"'})"'
+    return local fcn `"`namelist'()"'
+    return local fn `"`fn'"'
+end
+
+program _parse_fcn
+    gettoken nm 0 : 0
+    gettoken 0 rest : 0, parse("(")
+    if `"`rest'"'!="" {
+        gettoken args rest: rest, match(par)
+        if "`par'"==""             error 198
+        if strtrim(`"`args'"')!="" error 198
+        if `"`rest'"'!=""          error 198
+    }
+    c_local `nm' `"`0'"'
 end
 
 version 14
@@ -426,18 +540,21 @@ void crosswalk(string scalar fcn, real scalar expand, string scalar xvar,
     real scalar noinfo, string scalar out)
 {
     real scalar            i, n, Cok, Nadd, nadd
-    string colvector       F, T
+    string scalar          fn
+    string colvector       T
+    string matrix          F
     real colvector         C, null
     transmorphic colvector X, Y, FROM
     pointer scalar         d
     transmorphic matrix    TO
     
     // load main translator
-    T = table_load(fcn)
+    T = table_load(fcn, fn="") // fills in fn
+    st_local("fn", fn)
     F = table_alias(T)
     n = rows(F)
     if (!n) {
-        F = fcn
+        F = (fcn, "")
         n = 1
     }
     if (expand) Nadd = 0
@@ -450,8 +567,9 @@ void crosswalk(string scalar fcn, real scalar expand, string scalar xvar,
     null = J(rows(Y),1,0)
     // apply translator(s)
     for (i=1;i<=n;i++) {
-        if (F!=fcn) T = table_load(F[i])
-        table_parse(T, FROM="", TO="")
+        if (F[,1]!=fcn) T = table_load(F[i,1])
+        table_parse(T, FROM="", TO="", F[i,2])
+        if (!cols(TO)) TO = J(rows(TO),1,"")
         if (!isstring(Y)) {
             if (!_strtorealifpossible(FROM, 1)) {
                 printf("{p 0 0 2}{txt}(" + "crosswalk table {bf:%s()} " +
@@ -474,7 +592,7 @@ void crosswalk(string scalar fcn, real scalar expand, string scalar xvar,
         if (copyrest & i==n) d = &X
         else                 d = &missingof(TO)
         if (expand) {
-            nadd = _cw_expand(null, Y, C, FROM, TO, *d, F[i], Cok, touse)
+            nadd = _cw_expand(null, Y, C, FROM, TO, *d, F[i,1], Cok, touse)
             if (nadd & i<n) { // reload data for next translator if necessary
                 if (st_isstrvar(xvar)) st_sview(X, ., xvar, touse)
                 else                   st_view(X, ., xvar, touse)
@@ -489,7 +607,7 @@ void crosswalk(string scalar fcn, real scalar expand, string scalar xvar,
                 "{bf:expandok} is specified\n", fcn)
             exit(498)
         }
-        _cw_unique(null, Y, C, FROM, TO, *d, F[i], Cok)
+        _cw_unique(null, Y, C, FROM, TO, *d, F[i,1], Cok)
     }
     if (!Cok) {
         printf("{p 0 0 2}{txt}(" +
@@ -739,13 +857,102 @@ void _info_out(real colvector null, transmorphic colvector X)
     st_local("r_out", strofreal(rows(X)))
 }
 
-string colvector table_load(string scalar fcn)
+void list_table(string scalar fcn)
+{
+    real scalar      i, r
+    string scalar    fn
+    string colvector T
+    
+    T = table_load(fcn, fn="") // fills in fn
+    if (fn!="") printf("{txt}(listing crosswalk table from file %s)\n", fn)
+    else        printf("{txt}(listing crosswalk table from memory)\n")
+    r = rows(T)
+    displayas("txt")
+    for (i=1;i<=r;i++) printf("%s\n",T[i])
+    st_local("r", strofreal(r))
+    st_local("fn", fn)
+}
+
+void import_table(string scalar fcn)
+{
+    real scalar            j, c, brk
+    string scalar          fn
+    string colvector       T
+    transmorphic colvector FROM
+    transmorphic matrix    TO
+    
+    T = table_load(fcn, fn="") // fills in fn
+    if (fn!="") printf("{txt}(importing crosswalk table from file %s)\n", fn)
+    else        printf("{txt}(importing crosswalk table from memory)\n")
+    table_parse(T, FROM="", TO="")
+    c = cols(TO)
+    brk = setbreakintr(0)
+    stata("clear")
+    st_addobs(rows(FROM))
+    st_sstore(., st_addvar(_strtype(FROM), "v1"), FROM)
+    for (j=1;j<=c;j++)
+        st_sstore(., st_addvar(_strtype(TO[,j]), "v"+strofreal(1+j)), TO[,j])
+    (void) setbreakintr(brk)
+    st_local("fn", fn)
+}
+
+string colvector data_to_table()
+{
+    real scalar      j, k
+    string colvector T, S
+    
+    T = J(st_nobs(),1,"")
+    k = st_nvar()
+    for (j=1;j<=k;j++) {
+        if (st_isstrvar(j)) {
+            S = st_sdata(., j)
+            if (any(strpos(S, `"""'))) S = ("`" + `"""') :+ S :+ (`"""' + "'")
+            else if (any(strpos(S, " "))) S = `"""' :+ S :+ `"""'
+            else if (anyof(S, ""))        S = `"""' :+ S :+ `"""'
+        }
+        else S = strofreal(st_data(., j), st_varformat(j))
+        if (j>1) S = " " :+ S
+        T = T + S
+    }
+    return(T)
+}
+
+string colvector table_load(string scalar fcn, | string scalar fn)
+{
+    real scalar      i, r
+    real colvector   p
+    string scalar    s
+    string colvector T
+    
+    T = _table_load(fcn, fn) // fills in fn
+    r = rows(T)
+    p = J(r,1,0)
+    for (i=1;i<=r;i++) {
+        s = strtrim(subinstr(T[i],char(9)," "))
+        if (s=="") continue              // skip empty line
+        if (substr(s,1,1)=="*") continue // skip comment
+        if (s=="{smcl}") {               // skip smcl section
+            for (++i;i<=r;i++) {
+                s = strtrim(subinstr(T[i],char(9)," "))
+                if (s=="{asis}") break  // end of smcl section
+            }
+            continue
+        }
+        T[i] = s
+        p[i] = 1
+    }
+    p = selectindex(p)
+    if (length(p)) return(T[p])
+    else           return(J(0,1,""))
+}
+
+string colvector _table_load(string scalar fcn, string scalar fn)
 {
     string colvector T
     
-    T = table_get(fcn)
+    T = _table_get(fcn)
     if (T!=J(0,0,.)) return(T)
-    T = table_read(fcn)
+    T = _table_read(fcn, fn) // fills in fn
     if (T!=J(0,0,.)) return(T)
     errprintf("crosswalk table {bf:%s()} not found\n", fcn)
     exit(111)
@@ -796,7 +1003,17 @@ void table_put(string scalar nm, string colvector T)
     asarray(*p, nm, T)
 }
 
-transmorphic table_get(string scalar nm)
+string colvector table_get(string scalar fcn)
+{
+    string colvector T
+    
+    T = _table_get(fcn)
+    if (T!=J(0,0,.)) return(T)
+    errprintf("crosswalk table {bf:%s()} not found\n", fcn)
+    exit(111)
+}
+
+transmorphic matrix _table_get(string scalar nm)
 {   // returns J(0,0,.) if table is not found
     pointer scalar p
 
@@ -826,76 +1043,86 @@ void table_dir()
     }
 }
 
-transmorphic table_read(string scalar nm)
+void table_drop(string scalar nm)
+{
+    pointer scalar   p
+
+    p = findexternal("_CROSSWALK_DB")
+    if (p!=NULL) {
+        if (asarray_contains(*p, nm)) {
+            asarray_remove(*p, nm)
+            printf("{txt}(crosswalk table {bf:%s()} dropped)\n", nm)
+            return
+        }
+    }
+    printf("{txt}(crosswalk table {bf:%s()} not found; nothing to do)\n", nm)
+}
+
+transmorphic matrix _table_read(string scalar nm, string scalar fn)
 {   // returns J(0,0,.) if table is not found
-    string scalar fn
-    
     fn = findfile("_cwfcn_" + nm + ".sthlp")
     if (fn=="") return(J(0,0,.))
     return(cat(fn))
 }
 
-string colvector table_alias(string colvector T)
-{   // returns J(0,1,"") if T is not an alias list
-    real scalar      i, r
-    string scalar    s
-    string colvector F
+string matrix table_alias(string colvector T)
+{   // returns J(0,2,"") if T is not an alias list
+    real scalar   i, r, l
+    string scalar s, ocol
+    string matrix F
     
     r = rows(T)
-    F = J(r,1,"")
+    F = J(r,2,"")
     for (i=1;i<=r;i++) {
-        s = strtrim(subinstr(T[i],char(9)," "))
-        // skip empty lines
-        if (s=="") continue
-        // skip comments
-        if (substr(s,1,1)=="*") continue
-        // skip header
-        if (s=="{smcl}") {
-            for (++i;i<=r;i++) { // find end
-                s = strtrim(subinstr(T[i],char(9)," "))
-                if (s=="{asis}") break
+        s = T[i]
+        if (substr(s,1,1)!=".") return(J(0,2,"")) // alias must start with "."
+        if (strpos(s," "))      return(J(0,2,"")) // blanks not allowed in alias
+        ocol = ""
+        if (l=strpos(s,"(")) { // check ()
+            if (substr(s,-1,1)==")") {
+                ocol = substr(s,l+1,strlen(s)-l-1)
+                s = substr(s,1,l-1)
             }
-            continue
         }
-        // parse row
-        if (substr(s,1,1)!=".") return(J(0,1,"")) // alias must start with "."
-        if (strpos(s," "))      return(J(0,1,"")) // blanks not allowed in alias
-        F[i] = substr(s,2,.)
+        if (strlen(s)<2) return(J(0,2,"")) // alias name missing
+        F[i,] = (substr(s,2,.), ocol)
     }
-    return(select(F, F:!=""))
+    return(select(F, F[,1]:!=""))
 }
 
-void table_parse(string colvector T, string colvector FROM, string matrix TO)
+void table_parse(string colvector T, string colvector FROM, string matrix TO,
+    | string scalar OCOL)
 {
-    real scalar      i, j, r, c, l
+    real scalar      i, j, r, c, l, ocol
     real colvector   p
     string rowvector s
     transmorphic     t
     
+    if (OCOL!="") ocol = strtoreal(OCOL) // column containing origin values
+    else          ocol = 1
     t = tokeninit()
     tokenqchars(t, ("''", `""""', `"`""'"'))
     r = rows(T)
-    FROM = TO = J(r,c=1,"")
+    FROM = J(r,1,""); TO = J(r,c=0,"")
     p = J(r,1,0) 
     for (i=1;i<=r;i++) {
-        s = strtrim(subinstr(T[i],char(9)," "))
-        // skip empty lines
-        if (s=="") continue
-        // skip comments
-        if (substr(s,1,1)=="*") continue
-        // skip header
-        if (s=="{smcl}") {
-            for (++i;i<=r;i++) { // find end
-                s = strtrim(subinstr(T[i],char(9)," "))
-                if (s=="{asis}") break
-            }
-            continue
+        tokenset(t, T[i])
+        if (ocol==1) {
+            FROM[i] = strip_quotes(tokenget(t)) // first
+            s = tokengetall(t)                  // rest
+            l = length(s)
         }
-        // parse row
-        tokenset(t, s)
-        FROM[i] = strip_quotes(tokenget(t)) // first
-        s = tokengetall(t)                  // rest
-        l = length(s)
+        else {
+            s = tokengetall(t)
+            l = length(s)
+            if (ocol>0 & ocol<=l) {
+                FROM[i] = strip_quotes(s[ocol])
+                if (l>1) s = select(s, (1..l):!=ocol)
+                else     s = J(0,1,"")
+                l = length(s)
+            }
+            else FROM[i] = ""
+        }
         for (j=l; j; j--) s[j] = strip_quotes(s[j])
         if (l==c)     TO[i,] = s
         else if (l<c) TO[|i,1 \ i,l|] = s
@@ -935,6 +1162,7 @@ void casefcn_read(string scalar nm, string scalar tmpf)
         errprintf("case function {bf:case.%s()} not found\n", nm)
         exit(111)
     }
+    st_local("fn", fn)
     T = cat(fn)
     r = rows(T)
     fh = fopen(tmpf, "w")
@@ -967,14 +1195,17 @@ void labels_set(string scalar lblname, string rowvector vnames,
     string scalar lblset, real scalar modify, real scalar minimal)
 {
     real scalar            i, n, hasmis
+    string scalar          fn
     real colvector         p
     transmorphic colvector values
     string matrix          labels
     
     // get label definitions
-    table_parse(table_load("labels_"+lblset), values="", labels="")
+    table_parse(table_load("labels_"+lblset, fn=""), values="", labels="")
+    st_local("fn_lblset", fn)
     values = strtoreal(values)
-    if (cols(labels)>1) labels = labels[,1]
+    if      (!cols(labels))  labels = J(rows(labels),1,"")
+    else if (cols(labels)>1) labels = labels[,1]
     // value must be integer or extended missing
     p = selectindex((values:==trunc(values)) :& (values:!=.))
     if (length(p)<rows(values)) {
@@ -1100,6 +1331,14 @@ real colvector labels_minim_hash(real colvector values, string rowvector vnames)
     p = J(r,1,0)
     for (i=r; i; i--) p[i] = asarray(A, values[i])
     return(selectindex(p))
+}
+
+void _checkdir(string scalar path)
+{
+    if (!direxists(path)) {
+        errprintf("directory '%s' does not exist\n", path)
+        exit(499)
+    }
 }
 
 end

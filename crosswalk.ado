@@ -1,4 +1,4 @@
-*! version 1.0.1  13feb2025  Ben Jann
+*! version 1.0.2  21feb2025  Ben Jann
 
 capt mata: assert(mm_version()>=200)
 if _rc==1 exit _rc
@@ -238,9 +238,7 @@ program _crosswalk, rclass
         if `r_out' {
             if `r_out'==1  local msg "{stata di r(levels_out):`r_out' level}"
             else           local msg "{stata di r(levels_out):`r_out' levels}"
-            if `r_out'==1  local msg "`msg' of {bf:`xvar'} is"
-            else           local msg "`msg' of {bf:`xvar'} are"
-            di as txt "(`msg' out of scope)"
+            di as txt "(`msg' of {bf:`xvar'} not matched)"
         }
     }
     

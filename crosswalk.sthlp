@@ -1,5 +1,5 @@
 {smcl}
-{* 13feb2025}{...}
+{* 21feb2025}{...}
 {viewerjumpto "Syntax" "crosswalk##syntax"}{...}
 {viewerjumpto "Description" "crosswalk##description"}{...}
 {viewerjumpto "Options" "crosswalk##options"}{...}
@@ -134,7 +134,7 @@
     {p_end}
 {synopt :{opt mis:sing}}treat missing values like other values
     {p_end}
-{synopt :{opt copy:rest}[{cmd:(}{cmdab:nol:abel}{cmd:)}]}copy values that are out of scope
+{synopt :{opt copy:rest}[{cmd:(}{cmdab:nol:abel}{cmd:)}]}retain values that are not matched
     {p_end}
 {synopt :{opt copymis:sing}[{cmd:(}{cmdab:nol:abel}{cmd:)}]}copy extended missing values
     {p_end}
@@ -146,9 +146,9 @@
     {p_end}
 {synopt :{opt num:eric}}enforce numeric format
     {p_end}
-{synopt :{opt noinfo}}omit out-of-scope information
+{synopt :{opt noinfo}}omit information on values that are not matched
     {p_end}
-{synopt :{opt out(outname)}}store out-of-scope indicator
+{synopt :{opt out(outname)}}tag observations that are not matched 
     {p_end}
 {synopt :{opt fast}}do not restore data on error or break if {cmd:expandok} is specified
     {p_end}
@@ -177,10 +177,7 @@
 {synopt :{helpb _cwfcn_isco08_to_iseisps:isco08_to_iseisps()}}alternative to {cmd:isco08_to_isei()}{p_end}
 {synopt :{helpb _cwfcn_isco08_to_siops:isco08_to_siops()}}ISCO-08 to SIOPS scores;
     {helpb _cwfcn_isco08_to_treiman:isco08_to_treiman()} is a synonym{p_end}
-{synopt :{helpb _cwfcn_isco08_to_oep:isco08_to_oep()}}ISCO-08 to OEP scores; also see{break}
-    {helpb _cwfcn_isco08_3_to_oep:isco08_3_to_oep()}{break}
-    {helpb _cwfcn_isco08_2_to_oep:isco08_2_to_oep()}{break}
-    {helpb _cwfcn_isco08_1_to_oep:isco08_1_to_oep()}{p_end}
+{synopt :{helpb _cwfcn_isco08_to_oep:isco08_to_oep()}}ISCO-08 to OEP scores{p_end}
 {synopt :{helpb _cwfcn_isco08_to_esec:isco08_to_esec()}}ISCO-08 to ESEC classes; also see{break}
     {helpb _cwfcn_isco08_3_to_esec:isco08_3_to_esec()}{p_end}
 {synopt :{helpb _cwfcn_isco08_to_oesch:isco08_to_oesch()}}ISCO-08 to OESCH classes; also see{break}
@@ -193,10 +190,7 @@
 {synopt :{helpb _cwfcn_isco88_to_isei:isco88_to_isei()}}ISCO-88 to ISEI scores{p_end}
 {synopt :{helpb _cwfcn_isco88_to_siops:isco88_to_siops()}}ISCO-88 to SIOPS scores;
     {helpb _cwfcn_isco88_to_treiman:isco88_to_treiman()} is a synonym{p_end}
-{synopt :{helpb _cwfcn_isco88_to_oep:isco88_to_oep()}}ISCO-88 to OEP scores; also see{break}
-    {helpb _cwfcn_isco88_3_to_oep:isco88_3_to_oep()}{break}
-    {helpb _cwfcn_isco88_2_to_oep:isco88_2_to_oep()}{break}
-    {helpb _cwfcn_isco88_1_to_oep:isco88_1_to_oep()}{p_end}
+{synopt :{helpb _cwfcn_isco88_to_oep:isco88_to_oep()}}ISCO-88 to OEP scores{p_end}
 {synopt :{helpb _cwfcn_isco88_to_mps:isco88_to_mps()}}ISCO-88 to MPS scores{p_end}
 {synopt :{helpb _cwfcn_isco88_to_esec:isco88_to_esec()}}ISCO-88 to ESEC classes; also see{break}
     {helpb _cwfcn_isco88_3_to_esec:isco88_3_to_esec()}{p_end}
@@ -340,13 +334,11 @@
 
 {phang}
     {cmd:copyrest}[{cmd:(}{cmdab:nol:abel}{cmd:)}] copies values that are
-    out of scope into the generated variable (within the subsample
+    not matched by the crosswalk table into the generated variable (within the subsample
     selected by {it:{help if}} and {it:{help in}}). By default, the generated
-    variable will be set to missing for observation without match in the
-    crosswalk table. Specify {cmd:copyrest} to retain the original values for
-    these observations rather than setting the variable to missing. Unless
-    argument {cmd:nolabel} is specified,
-    {cmd:copyrest} also copies all value labels from {it:varname}
+    variable will be set to missing for these observations; specify
+    {cmd:copyrest} to retain the original values. Unless argument {cmd:nolabel}
+    is specified, {cmd:copyrest} also copies all value labels from {it:varname}
     to the generated variable (but note that individual labels may subsequently
     be overwritten by labels obtained from {it:lblset}). {cmd:copyrest}
     implies {cmd:copymissing} unless {cmd:missing} is
@@ -387,14 +379,13 @@
     {cmd:numeric} is allowed.
 
 {phang}
-    {cmd:noinfo} omits the information on levels of {it:varname} that are out
-    of scope (i.e., levels of {it:varname} that have no match in the crosswalk
-    table). This saves some computer time.
+    {cmd:noinfo} skips collecting information on levels of {it:varname} that are
+    not matched by the crosswalk table. This saves some computer time.
 
 {phang}
-    {opt out(outname)} adds an out-of-scope indicator to the data (1 if
-    no match in the crosswalk table, else 0; missing if outside of
-    the evaluated subsample).
+    {opt out(outname)} adds an indicator to the data that tags observations
+    without match in the crosswalk table (1 = not matched, 0 = matched,
+    . = not in evaluated subsample).
 
 {phang}
     {cmd:fast} does not restore the original dataset if {cmd:expandok} has been
@@ -713,7 +704,7 @@ determining the destination column{p_end}
       Scalars:
 {p2colset 7 22 22 2}{...}
 {p2col : {cmd:r(string)}}{cmd:1} if the generated variable is string, else {cmd:0}{p_end}
-{p2col : {cmd:r(r_out)}}number of levels of {it:varname} that are out of scope; only if {cmd:noinfo} is not specified{p_end}
+{p2col : {cmd:r(r_out)}}number of levels of {it:varname} without match; only if {cmd:noinfo} is not specified{p_end}
 {p2col : {cmd:r(N_add)}}number of added observations; only if {cmd:expandok} is specified{p_end}
 
       Macros:
@@ -725,7 +716,7 @@ determining the destination column{p_end}
 {p2col : {cmd:r(varname)}}name of source variable{p_end}
 {p2col : {cmd:r(case)}}{help crosswalk##case:{it:case}} specification{p_end}
 {p2col : {cmd:r(fn_casefcn)}}filename of applied {help crosswalk##casefcn:{it:casefcn}()} (or empty){p_end}
-{p2col : {cmd:r(levels_out)}}list of levels of {it:varname} that are out of scope; only if {cmd:noinfo} is not specified{p_end}
+{p2col : {cmd:r(levels_out)}}list of levels of {it:varname} without match; only if {cmd:noinfo} is not specified{p_end}
 
 {pstd}
     Command {cmd:crosswalk} {it:newvar} {cmd:=} {it:casefcn}{cmd:()} stores the

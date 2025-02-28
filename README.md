@@ -24,6 +24,11 @@ on the system:
 
 Main changes:
 
+    version 1.0.2  21feb2025
+    - OEP scales updated to version published on OSF on 2025-02-20; 1-, 2-, 3-digit
+      variants of OEP crosswalks removes because they are redundant in the new
+      verion
+
     version 1.0.1  13feb2025
     - command -crosswalk drop- added
     - command -crosswalk save- added

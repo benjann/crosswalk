@@ -1,5 +1,5 @@
 {smcl}
-{* version 1.0.0  07feb2025  Ben Jann}{...}
+{* version 1.0.1  07mar2025  Ben Jann}{...}
 {hi:ilo_isco08_to_isco88()} {hline 2} Translate 4-digit ISCO-08 to 4-digit ISCO-88 (non-unique)
 
 {title:Syntax}
@@ -16,7 +16,7 @@
     codes based on the correspondence table provided by the ILO. The crosswalk table is
     non-unique, meaning that a single ISCO-08 code may be matched to multiple
     ISCO-88 codes (and vice versa; many-to-many crosswalk). {cmd:ilo_isco08_to_isco88()}
-    requires option {helpb crosswalk##expandok:expandok}.
+    requires option {helpb crosswalk##dupl:duplicates()}.
 
 {title:Source}
 

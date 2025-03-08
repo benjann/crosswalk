@@ -1,4 +1,4 @@
-*! version 1.0.2  21feb2025  Ben Jann
+*! version 1.0.3  08mar2025  Ben Jann
 
 capt mata: assert(mm_version()>=200)
 if _rc==1 exit _rc
@@ -86,11 +86,15 @@ program _crosswalk, rclass
     // rest of syntax
     syntax name(name=generate) [if] [in] [, Replace NOLabel Label(str)/*
         */ MISsing COPYrest COPYrest2(str) COPYMISsing COPYMISsing2(str)/*
-        */ NOINFO out(name) STRing NUMeric EXPANDok fast ]
+        */ NOINFO out(name) STRing NUMeric/*
+        */ DUPlicates(str) EXPANDok fast ] // expandok is old syntax
+    if `"`duplicates'"'=="" & "`expandok'"!="" local duplicates expand
+    _parse_dupl, `duplicates' // returns dupl and duplicates
     if "`string'"!="" & "`numeric'"!="" {
         di as err "{bf:string} and {bf:numeric} not both allowed"
         exit 198
     }
+    if `dupl'>2 & "`string'"=="" local numeric numeric
     if `"`copyrest2'"'!="" {
         local copyrest copyrest
         _parse_copyrest, `copyrest2'
@@ -99,47 +103,30 @@ program _crosswalk, rclass
         local copymissing copymissing
         _parse_copymissing, `copymissing2'
     }
-    if "`copymissing'"!="" {
-        if "`missing'"!="" {
-            di as err "only one of {bf:missing} and {bf:copymissing} allowed"
-            exit 198
-        }
-        if "`copyrest'"!="" {
-            di as err "only one of {bf:copyrest} and {bf:copymissing} allowed"
-            exit 198
-        }
-        if `str0' {
-            di as err "source variable is string; {bf:copymissing} not allowed"
-            exit 198
-        }
-        if "`string'"!="" {
-            di as err "{bf:copymissing} and {bf:string} not both allowed"
-            exit 198
-        }
-        local numeric numeric
-    }
     if "`copyrest'"!="" {
         if `str0' {
-            if "`numeric'"!="" {
-                di as err "{bf:numeric} not allowed if source variable is "/*
-                    */ "string and {bf:copyrest} has been specified"
-                exit 198
-            }
-            local string string
+            if "`numeric'"=="" local string string
             local copyrest_nolabel nolabel
         }
         else {
-            if "`string'"!="" {
-                di as err "{bf:string} not allowed if source variable is "/*
-                    */ "numeric and {bf:copyrest} has been specified"
-                exit 198
-            }
-            local numeric numeric
+            if "`string'"=="" local numeric numeric
+            else              local copyrest_nolabel nolabel
             if "`missing'"=="" {
                 local copymissing copymissing
                 local copymissing_nolabel nolabel
             }
         }
+    }
+    if "`copymissing'"!="" {
+        if "`missing'"!="" {
+            di as err "only one of {bf:missing} and {bf:copymissing} allowed"
+            exit 198
+        }
+        if `str0' {
+            di as txt "(source variable is string; {cmd:copymissing} ignored)"
+            local copymissing
+        }
+        else if "`string'"=="" local numeric numeric
     }
     if "`replace'"=="" {
         confirm new variable `generate'
@@ -164,7 +151,7 @@ program _crosswalk, rclass
     }
     
     // preserve data
-    if "`expandok'"!="" & "`fast'"=="" preserve
+    if "`duplicates'"=="expand" & "`fast'"=="" preserve
     
     // mark sample
     marksample touse0
@@ -196,11 +183,11 @@ program _crosswalk, rclass
     // translate
     tempvar newvar
     if "`out'"!="" tempvar OUT
-    mata: crosswalk(`"`fcn'"', "`expandok'"!="", "`xvar'", "`CASE'",/*
+    mata: crosswalk(`"`fcn'"', `dupl', "`xvar'", "`CASE'",/*
         */ "`newvar'", "`touse'", "`string'"!="", "`numeric'"!="",/*
         */ "`copyrest'"!="", "`noinfo'"!="", "`OUT'")
     local str1 = (substr("`:type `newvar''",1,3)=="str")
-    if "`expandok'"!="" {
+    if "`duplicates'"=="expand" {
         if `nadd'==1  local msg "observation"
         else          local msg "observations"
         di as txt "(`nadd' `msg' added)"
@@ -230,7 +217,7 @@ program _crosswalk, rclass
     
     // copy extended missing values (updated haslbls)
     if "`copymissing'"!="" {
-        _copy_missing `xvar' `newvar' `touse0' `copymissing_nolabel'
+        _copy_missing `str1' `xvar' `newvar' `touse0' `copymissing_nolabel'
     }
     
     // display info levels of X not covered by the translator
@@ -270,13 +257,14 @@ program _crosswalk, rclass
     }
     
     // cancel preserve
-    if "`expandok'"!="" & "`fast'"=="" restore, not
+    if "`duplicates'"=="expand" & "`fast'"=="" restore, not
     
     // returns
     if "`noinfo'"=="" {
         ret local levels_out: list clean levels_out
         ret scalar r_out = `r_out'
     }
+    ret local duplicates "`duplicates'"
     ret local fn_casefcn `"`fn_casefcn'"'
     ret local case       `"`case'"'
     ret local varname    `xvar'
@@ -286,7 +274,33 @@ program _crosswalk, rclass
     ret local fn         `"`fn'"'
     ret local fcn        `"`fcn'()"'
     ret scalar string    = `str1'
-    if "`expandok'"!="" ret scalar N_add = `nadd'
+    if "`duplicates'"=="expand" ret scalar N_add = `nadd'
+end
+
+program _parse_dupl
+    local Stats First Last min max mean
+    //   dupl = 1     2    3   4   5
+    local stats = strlower("`Stats'")
+    syntax [, expand `Stats' ]
+    local dupl 0
+    local duplicates
+    if "`expand'"!="" {
+        local dupl -1
+        local duplicates "`expand'"
+    }
+    local i 0
+    foreach stat of local stats {
+        local ++i
+        if "``stat''"=="" continue
+        if `dupl' {
+            di as err "only one keyword allowed in {bf:duplicates()}"
+            exit 198
+        }
+        local dupl `i'
+        local duplicates "`stat'"
+    }
+    c_local dupl `dupl'
+    c_local duplicates `duplicates'
 end
 
 program _parse_copyrest
@@ -306,7 +320,11 @@ program _parse_label
 end
 
 program _copy_missing
-    args xvar newvar touse nolabel
+    args str xvar newvar touse nolabel
+    if `str' {
+        qui replace `newvar' = strofreal(`xvar') if `touse' & `xvar'>.
+        exit
+    }
     qui replace `newvar' = `xvar' if `touse' & `xvar'>.
     if "`nolabel'"!="" exit
     local vlab: val lab `xvar'
@@ -532,16 +550,16 @@ version 14
 mata:
 mata set matastrict on
 
-void crosswalk(string scalar fcn, real scalar expand, string scalar xvar,
+void crosswalk(string scalar fcn, real scalar dupl, string scalar xvar,
     string scalar CASE, string scalar newvar, string scalar touse,
     real scalar str, real scalar num, real scalar copyrest,
     real scalar noinfo, string scalar out)
 {
-    real scalar            i, n, Cok, Nadd, nadd
+    real scalar            i, n, Cok, nobs, Nadd, nadd
     string scalar          fn
     string colvector       T
     string matrix          F
-    real colvector         C, null
+    real colvector         C, null, id
     transmorphic colvector X, Y, FROM
     pointer scalar         d
     transmorphic matrix    TO
@@ -555,14 +573,16 @@ void crosswalk(string scalar fcn, real scalar expand, string scalar xvar,
         F = (fcn, "")
         n = 1
     }
-    if (expand) Nadd = 0
+    if (dupl<0) Nadd = 0 // (expand)
     // get data
     if (st_isstrvar(xvar)) st_sview(X="", ., xvar, touse)
     else                   st_view(X=., ., xvar, touse)
     if (CASE!="") C = st_data(., CASE, touse)
     Cok = !rows(C)
     Y = X
-    null = J(rows(Y),1,0)
+    nobs = rows(Y)
+    null = J(nobs,1,0)
+    if (dupl>2) id = 1::nobs
     // apply translator(s)
     for (i=1;i<=n;i++) {
         if (F[,1]!=fcn) T = table_load(F[i,1])
@@ -587,9 +607,8 @@ void crosswalk(string scalar fcn, real scalar expand, string scalar xvar,
             }
             else (void) _strtorealifpossible(TO, 0)
         }
-        if (copyrest & i==n) d = &X
-        else                 d = &missingof(TO)
-        if (expand) {
+        d = _cw_set_d(copyrest & i==n, missingof(TO), X, xvar)
+        if (dupl<0) {
             nadd = _cw_expand(null, Y, C, FROM, TO, *d, F[i,1], Cok, touse)
             if (nadd & i<n) { // reload data for next translator if necessary
                 if (st_isstrvar(xvar)) st_sview(X, ., xvar, touse)
@@ -599,14 +618,22 @@ void crosswalk(string scalar fcn, real scalar expand, string scalar xvar,
             Nadd = Nadd + nadd
             continue
         }
-        if (rows(FROM) & !all(mm_unique_tag(FROM))) {
+        if (dupl>2) {
+            _cw_nonunique(null, id, Y, C, FROM, TO, *d, F[i,1], Cok,
+                X, copyrest, i==n)
+            continue
+        }
+        if      (dupl==1) _cw_dupl_select(FROM, TO, 1)
+        else if (dupl==2) _cw_dupl_select(FROM, TO, 2)
+        else if (rows(FROM) & !all(mm_unique_tag(FROM))) {
             errprintf("crosswalk table {bf:%s()} contains duplicate origin " +
                 "values;\norigin values must be unique unless option " +
-                "{bf:expandok} is specified\n", fcn)
+                "{helpb crosswalk##dupl:duplicates()} is specified\n", fcn)
             exit(498)
         }
         _cw_unique(null, Y, C, FROM, TO, *d, F[i,1], Cok)
     }
+    if (dupl>2) _cw_nonunique_collapse(dupl, null, id, Y, nobs)
     if (!Cok) {
         printf("{p 0 0 2}{txt}(" +
                "argument {it:case} not used by {bf:%s()}" +
@@ -615,10 +642,32 @@ void crosswalk(string scalar fcn, real scalar expand, string scalar xvar,
     // store result
     if (isstring(Y)) st_sstore(., st_addvar(_strtype(Y), newvar), touse, Y)
     else             st_store(., st_addvar(_dtype(Y), newvar), touse, Y)
-    if (expand) st_local("nadd", strofreal(Nadd))
+    if (dupl<.) st_local("nadd", strofreal(Nadd)) // (expand)
     // collect info on values not covered by the translator
     if (out!="") st_store(., st_addvar("byte", out), touse, null)
     if (!noinfo) _info_out(null, X) // (assumes X is no longer needed)
+}
+
+pointer scalar _cw_set_d(real scalar xset, transmorphic scalar mv,
+    transmorphic colvector X, string scalar xvar)
+{
+    if (!xset) return(&mv)
+    if (isstring(mv)) {
+        if (isstring(X)) return(&X)
+        return(&strofreal(X, st_varformat(xvar)))
+    }
+    if (isstring(X)) return(&strtoreal(X))
+    return(&X)
+}
+
+void _cw_dupl_select(transmorphic colvector FROM, transmorphic matrix TO,
+    real scalar which) // 1 use first, 2 use last
+{
+    real colvector p
+    
+    if (!rows(FROM)) return // empty table
+    p = selectindex(mm_unique_tag(FROM, which))
+    FROM = FROM[p]; TO = TO[p,]
 }
 
 real scalar _cw_expand(real colvector null, transmorphic colvector Y,
@@ -628,7 +677,28 @@ real scalar _cw_expand(real colvector null, transmorphic colvector Y,
 {
     real scalar    n
     string scalar  E
-    real colvector p, L
+    real colvector L
+    
+    // match and expand
+    n = __cw_expand(null, Y, C, FROM, TO, d, fcn, Cok, L=.)
+    // expand original data if needed
+    if (n) {
+        null = null \ J(n, 1, 0)
+        E = st_tempname()
+        st_store(., st_addvar("double", E), touse, 1 :+ L)
+        stata("expand " + E + " if " + touse, 1)
+        st_dropvar(E)
+    }
+    return(n)
+}
+
+real scalar __cw_expand(real colvector null, transmorphic colvector Y,
+    real colvector C, transmorphic colvector FROM, transmorphic matrix TO,
+    transmorphic colvector d, string scalar fcn, real scalar Cok,
+    real colvector L)
+{
+    real scalar    n
+    real colvector p
     pointer matrix P
     
     // check for duplicates
@@ -638,7 +708,7 @@ real scalar _cw_expand(real colvector null, transmorphic colvector Y,
         return(0)
     }
     // create pointer matrix containing destination values
-    P = _cw_make_P(TO, p, L=.) // (fills in counts in L)
+    P = _cw_make_P(TO, p, L) // (fills in counts in L)
     // obtain ids of matches 
     p = _cw_match(null, Y, FROM[p])
     // count extra obs and expand original data if needed
@@ -648,14 +718,6 @@ real scalar _cw_expand(real colvector null, transmorphic colvector Y,
     P = _cw_collect(null, p, C, P, NULL, fcn, Cok)
     // expand destination values
     Y = _cw_expand_P(P, L, d, n)
-    // and expand original data if needed return number of added obs
-    if (n) {
-        null = null \ J(n, 1, 0)
-        E = st_tempname()
-        st_store(., st_addvar("double", E), touse, 1 :+ L)
-        stata("expand " + E + " if " + touse, 1)
-        st_dropvar(E)
-    }
     return(n)
 }
 
@@ -730,6 +792,88 @@ transmorphic colvector _cw_expand_P(pointer colvector P, real colvector L,
     }
     return(Y)
 }
+
+void _cw_nonunique(real colvector null, real colvector id,
+    transmorphic colvector Y, real colvector C, transmorphic colvector FROM,
+    transmorphic matrix TO, transmorphic colvector d, string scalar fcn,
+    real scalar Cok, transmorphic colvector X, real scalar copyrest,
+    real scalar last)
+{
+    real scalar    n
+    real colvector L
+    
+    // match and expand
+    n = __cw_expand(null, Y, C, FROM, TO, d, fcn, Cok, L=.)
+    if (!n) return
+    // expend null and id
+    null = null \ J(n, 1, 0)
+    _cw_nonunique_expand(id, L, n)
+    // expand X and C if needed
+    if (last) return
+    if (copyrest) _cw_nonunique_expand(X, L, n)
+    if (!rows(C)) return
+    _cw_nonunique_expand(C, L, n)
+}
+
+void _cw_nonunique_expand(transmorphic colvector Y, real colvector L,
+    real scalar n)
+{
+    real scalar i, l, a, b
+    
+    i = rows(Y)
+    Y = Y \ J(n,1,missingof(Y))
+    a = i + n + 1
+    for (i=rows(L);i;i--) {
+        l = L[i]
+        if (!l) continue
+        b = a - 1; a = a - l
+        Y[|a\b|] = J(l,1,Y[i])
+    }
+}
+
+void _cw_nonunique_collapse(real scalar dupl, real colvector null,
+    real colvector id, transmorphic colvector Y, real scalar nobs)
+{
+    real scalar    a, b, i
+    real colvector p, q, yi
+    pointer scalar f
+    
+    if (isstring(Y)) {
+        if      (dupl==3) f = &_cw_strmin()
+        else if (dupl==4) f = &_cw_strmax()
+        else              f = &_cw_strmean()
+    }
+    else {
+        if      (dupl==3) f = &min()
+        else if (dupl==4) f = &max()
+        else              f = &mean()
+    }
+    p = mm_order(id,1,1) // stable sort
+    q = selectindex(_mm_unique_tag(id[p]))
+    assert(rows(q)==nobs)
+    a = rows(id) + 1
+    for (i=nobs;i;i--) {
+        b = a - 1
+        a = q[i]
+        if (a==b) continue         // no match or no duplicates
+        a, b
+        yi = select(Y[p[|a\b|]], !null[p[|a\b|]]) // use matched only
+        if (!length(yi)) continue  // all non-matched
+        Y[i] = (*f)(yi)            // note: p[a] is equal to i
+        null[i] = 0                // treat as matched if at least one match
+    }
+    Y = Y[|1\nobs|]
+    null = null[|1\nobs|]
+}
+
+string scalar _cw_strmin(string colvector S)
+    return(strofreal(min(strtoreal(S))))
+
+string scalar _cw_strmax(string colvector S)
+    return(strofreal(max(strtoreal(S))))
+
+string scalar _cw_strmean(string colvector S)
+    return(strofreal(mean(strtoreal(S))))
 
 void _cw_unique(real colvector null, transmorphic colvector X,
     real colvector C, transmorphic colvector FROM, transmorphic matrix TO,

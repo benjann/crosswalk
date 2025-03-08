@@ -1,5 +1,5 @@
 {smcl}
-{* version 1.0.0  09feb2025  Ben Jann}{...}
+{* version 1.0.1  07mar2025  Ben Jann}{...}
 {hi:soc00_to_soc10()} {hline 2} Translate 6-digit 2000 SOC to 6-digit 2010 SOC (non-unique)
 
 {title:Syntax}
@@ -17,7 +17,7 @@
     U.S. Bureau of Labor Statistics). The crosswalk table is non-unique,
     meaning that a single 2000 SOC may be matched to multiple 2010 SOC codes
     (and vice versa; many-to-many crosswalk). {cmd:soc00_to_soc10()} requires
-    option {helpb crosswalk##expandok:expandok}.
+    option {helpb crosswalk##dupl:duplicates()}.
 
 {title:Source}
 

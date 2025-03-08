@@ -24,6 +24,13 @@ on the system:
 
 Main changes:
 
+    version 1.0.3 08mar2025
+    - option -duplicates()- added; -expandok- no longer documented but still
+      supported; -expandok- is equivalent to -duplicates(expand)-
+    - OEP scales updated to version published on OSF on 2025-03-04
+    - may now override the data type implied by -copyrest-; values will be converted
+      if necessary; likewise, -string- is now allowed with -copymissing-
+
     version 1.0.2  21feb2025
     - OEP scales updated to version published on OSF on 2025-02-20; 1-, 2-, 3-digit
       variants of OEP crosswalks removes because they are redundant in the new

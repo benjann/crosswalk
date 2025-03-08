@@ -1,5 +1,5 @@
 {smcl}
-{* version 1.0.0  09feb2025  Ben Jann}{...}
+{* version 1.0.1  07mar2025  Ben Jann}{...}
 {hi:isco08_to_soc10()} {hline 2} Translate 4-digit ISCO-08 to 6-digit 2010 SOC (non-unique)
 
 {title:Syntax}
@@ -16,7 +16,7 @@
     (2010 Standard Occupational Classification by the U.S. Bureau of Labor Statistics). The
     crosswalk table is non-unique, meaning that a single ISCO-08 code may be matched to
     multiple 2010 SOC codes (and vice versa; many-to-many crosswalk). {cmd:isco08_to_soc10()}
-    requires option {helpb crosswalk##expandok:expandok}.
+    requires option {helpb crosswalk##dupl:duplicates()}.
 
 {title:Source}
 

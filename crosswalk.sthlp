@@ -1,5 +1,5 @@
 {smcl}
-{* 21feb2025}{...}
+{* 08mar2025}{...}
 {viewerjumpto "Syntax" "crosswalk##syntax"}{...}
 {viewerjumpto "Description" "crosswalk##description"}{...}
 {viewerjumpto "Options" "crosswalk##options"}{...}
@@ -22,7 +22,7 @@
 {title:Syntax}
 
 {pstd}
-    Main command: recode a variable using crosswalk table {it:fcn}{cmd:()}
+    Main command: recode a variable using {it:fcn}{cmd:()}
 
 {p 8 15 2}
     {cmd:crosswalk} {newvar} {cmd:=}
@@ -130,7 +130,7 @@
 {marker opt}{...}
 {synopt :{help crosswalk##opts:{it:options}}}Description{p_end}
 {synoptline}
-{synopt :{opt expand:ok}}allow non-unique crosswalk table and expand data if needed
+{synopt :{cmdab:dup:licates(}{help crosswalk##dupl:{it:method}}{cmd:)}}how to handle duplicates in non-unique crosswalk table
     {p_end}
 {synopt :{opt mis:sing}}treat missing values like other values
     {p_end}
@@ -148,9 +148,9 @@
     {p_end}
 {synopt :{opt noinfo}}omit information on values that are not matched
     {p_end}
-{synopt :{opt out(outname)}}tag observations that are not matched 
+{synopt :{opt out(outname)}}tag observations that are not matched
     {p_end}
-{synopt :{opt fast}}do not restore data on error or break if {cmd:expandok} is specified
+{synopt :{opt fast}}do not restore data on error or break if {cmd:duplicates(expand)} is specified
     {p_end}
 {synopt :{opt r:eplace}}allow overwriting existing variables
     {p_end}
@@ -217,7 +217,7 @@
 {synopt :{helpb _cwfcn_isco68_to_isco88:isco68_to_isco88()}}ISCO-68 to ISCO-88{p_end}
 {synopt :{helpb _cwfcn_isco68_to_isco08:isco68_to_isco08()}}ISCO-68 to ISCO-08{p_end}
 
-{syntab :Translation (many-to-many)}
+{syntab :Translation (non-unique)}
 {synopt :{helpb _cwfcn_ilo_isco08_to_isco88:ilo_isco08_to_isco88()}}ISCO-08 to ISCO-88 (non-unique); also see{break}
     {helpb _cwfcn_ilo_isco88_to_isco08:ilo_isco88_to_isco08()}{p_end}
 {synopt :{helpb _cwfcn_isco08_to_soc10:isco08_to_soc10()}}ISCO-08 to 2010 SOC (non-unique); also see{break}
@@ -315,17 +315,32 @@
 {marker opts}{...}
 {dlgtab:Main options}
 
-{marker expandok}{...}
+{marker dupl}{...}
 {phang}
-    {cmd:expandok} allows the crosswalk table to contain duplicate origin values
-    and adds observations to the dataset if needed. By default, {cmd:crosswalk}
+    {opt duplicates(method)} determines how duplicates will be handled. By default, {cmd:crosswalk}
     requires the origin values in the crosswalk table to be unique, such that
     each value of {it:varname} only has a single match in the crosswalk table
-    (one-to-one or one-to-many crosswalk). Specify {cmd:expandok} to allow duplicate origin
-    values (many-to-one or many-to-many crosswalk). In this case, if an observation has
-    multiple matches in the crosswalk table, copies of the observation will be
-    added to the data, one for each match (similar to forming pairwise
-    combinations using {helpb joinby}).
+    (one-to-one or one-to-many crosswalk). Use the {cmd:duplicates()} option
+    to allow duplicate origin values (many-to-one or many-to-many crosswalk) and
+    specify how to handle the resulting matches. Argument {it:method} may
+    be one of the following.
+
+{p2colset 13 21 23 2}{...}
+{p2col:{cmd:expand}}keep all matches and expand the data; that is, if an
+    observation has multiple matches in the crosswalk table, copies of the
+    observation will be added to the data, one for each match (similar to forming
+    pairwise combinations using {helpb joinby})
+    {p_end}
+{p2col:{cmdab:f:irst}}use the first (topmost) match
+    {p_end}
+{p2col:{cmdab:l:ast}}use the last (bottommost) match
+    {p_end}
+{p2col:{cmd:min}}use the minimum of the matched values; implies {cmd:numeric}
+    {p_end}
+{p2col:{cmdab:max}}use the maximum of the matched values; implies {cmd:numeric}
+    {p_end}
+{p2col:{cmdab:mean}}use the mean of the matched values; implies {cmd:numeric}
+    {p_end}
 
 {phang}
     {cmd:missing} treats missing values like other values. The default is
@@ -341,21 +356,26 @@
     is specified, {cmd:copyrest} also copies all value labels from {it:varname}
     to the generated variable (but note that individual labels may subsequently
     be overwritten by labels obtained from {it:lblset}). {cmd:copyrest}
-    implies {cmd:copymissing} unless {cmd:missing} is
-    specified or the source variable is string. Furthermore, {cmd:copymissing}
-    implies {cmd:string} or {cmd:numeric} depending on the data type of the
-    source variable.
+    implies {cmd:copymissing} unless {cmd:missing} is specified or the source
+    variable is string.
+
+{pmore}
+    Note that {cmd:copyrest} implies {cmd:string} or {cmd:numeric} depending on
+    the data type of the source variable. You may override this behavior by
+    specifying {cmd:string} or {cmd:numeric} explicitly. If necessary, the source
+    values will then be converted to the specified data type on the fly (using
+    the variable's display {helpb format} and ignoring value labels when
+    converting from numeric to string).
 
 {phang}
     {cmd:copymissing}[{cmd:(}{cmdab:nol:abel}{cmd:)}] copies extended missing
     values into the generated variable (within the subsample selected by {it:{help if}}
     and {it:{help in}}). Specify {cmd:copymissing} if the source variable has extended
     missing values that you want to pass through to the generated variable;
-    value labels of extended missings will also be copied, unless argument
-    {cmd:nolabel} is specified. {cmd:copymissing} implies {cmd:numeric} and
-    is only allowed if the source variable is numeric. Only one of
-    {cmd:missing} and {cmd:copymissing} is allowed. Only one of {cmd:copyrest}
-    and {cmd:copymissing} is allowed.
+    value labels of extended missings will also be copied unless argument
+    {cmd:nolabel} is specified. {cmd:copymissing} implies {cmd:numeric} (unless
+    {cmd:string} is specified) and has no effect if the source variable is string. Only
+    one of {cmd:missing} and {cmd:copymissing} is allowed.
 
 {phang}
     {cmd:label(}[{it:lblset}][{cmd:,} {opt minimal}]{cmd:)} specifies a
@@ -388,9 +408,10 @@
     . = not in evaluated subsample).
 
 {phang}
-    {cmd:fast} does not restore the original dataset if {cmd:expandok} has been
+    {cmd:fast} does not restore the original dataset if {cmd:duplicates(expand)} has been
     specified and there is an error or the user presses {cmd:Break}. This saves
-    memory and some computer time. {cmd:fast} has no effect if {cmd:expandok} is omitted.
+    memory and some computer time. {cmd:fast} has no effect if {cmd:duplicates(expand)} is
+    not specified.
 
 {phang}
     {cmd:replace} allows overwriting an existing variable.
@@ -705,7 +726,7 @@ determining the destination column{p_end}
 {p2colset 7 22 22 2}{...}
 {p2col : {cmd:r(string)}}{cmd:1} if the generated variable is string, else {cmd:0}{p_end}
 {p2col : {cmd:r(r_out)}}number of levels of {it:varname} without match; only if {cmd:noinfo} is not specified{p_end}
-{p2col : {cmd:r(N_add)}}number of added observations; only if {cmd:expandok} is specified{p_end}
+{p2col : {cmd:r(N_add)}}number of added observations; only if {cmd:duplicates(expand)} is specified{p_end}
 
       Macros:
 {p2col : {cmd:r(fcn)}}name of applied {help crosswalk##fcn:{it:fcn}()}{p_end}
@@ -716,6 +737,7 @@ determining the destination column{p_end}
 {p2col : {cmd:r(varname)}}name of source variable{p_end}
 {p2col : {cmd:r(case)}}{help crosswalk##case:{it:case}} specification{p_end}
 {p2col : {cmd:r(fn_casefcn)}}filename of applied {help crosswalk##casefcn:{it:casefcn}()} (or empty){p_end}
+{p2col : {cmd:r(duplicates)}}{it:method} specified in {cmd:duplicates()}{p_end}
 {p2col : {cmd:r(levels_out)}}list of levels of {it:varname} without match; only if {cmd:noinfo} is not specified{p_end}
 
 {pstd}

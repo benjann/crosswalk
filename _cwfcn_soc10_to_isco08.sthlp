@@ -1,5 +1,5 @@
 {smcl}
-{* version 1.0.0  09feb2025  Ben Jann}{...}
+{* version 1.0.1  07mar2025  Ben Jann}{...}
 {hi:soc10_to_isco08()} {hline 2} Translate 6-digit 2010 SOC to 4-digit ISCO-08 (non-unique)
 
 {title:Syntax}
@@ -17,7 +17,7 @@
     4-digit ISCO-08. The crosswalk table is non-unique, meaning that a single
     2010 SOC may be matched to multiple ISCO-08 codes (and vice versa;
     many-to-many crosswalk). {cmd:soc10_to_isco08()} requires option
-    {helpb crosswalk##expandok:expandok}.
+    {helpb crosswalk##dupl:duplicates()}.
 
 {title:Source}
 

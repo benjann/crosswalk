@@ -1,4 +1,4 @@
-*! version 1.0.3  08mar2025  Ben Jann
+*! version 1.0.4  12mar2025  Ben Jann
 
 capt mata: assert(mm_version()>=200)
 if _rc==1 exit _rc

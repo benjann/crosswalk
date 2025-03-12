@@ -24,6 +24,9 @@ on the system:
 
 Main changes:
 
+    version 1.0.4 12mar2025
+    - OEP scales updated to version published on OSF on 2025-03-11
+
     version 1.0.3 08mar2025
     - option -duplicates()- added; -expandok- no longer documented but still
       supported; -expandok- is equivalent to -duplicates(expand)-

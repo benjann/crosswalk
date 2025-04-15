@@ -1,5 +1,5 @@
 {smcl}
-{* 08mar2025}{...}
+{* 15apr2025}{...}
 {viewerjumpto "Syntax" "crosswalk##syntax"}{...}
 {viewerjumpto "Description" "crosswalk##description"}{...}
 {viewerjumpto "Options" "crosswalk##options"}{...}
@@ -244,7 +244,8 @@
     {helpb _cwfcn_isco88_2_to_isco88_1:isco88_2_to_isco88_1()}{p_end}
 
 {syntab :Other}
-{synopt :{space 0}{help crosswalk##cwtable:{it:myname}{bf:()}}}custom crosswalk table{p_end}
+{synopt :{help crosswalk##addon:{it:addonfcn}{bf:()}}}crosswalk table provided by add-on package{p_end}
+{synopt :{help crosswalk##cwtable:{it:myname}{bf:()}}}custom crosswalk table{p_end}
 {synoptline}
 
 {synoptset 26}{...}
@@ -255,6 +256,7 @@
 {synopt :{helpb _cwcasefcn_esec:case.esec()}}ESEC case function for ISCO-08{p_end}
 {synopt :{helpb _cwcasefcn_esec:case.esec88()}}ESEC case function for ISCO-88{p_end}
 {synopt :{helpb _cwcasefcn_oesch:case.oesch()}}OESCH case function{p_end}
+{synopt :{help crosswalk##addon:{bf:case.}{it:addon}{bf:()}}}case function provided by add-on package{p_end}
 {synopt :{help crosswalk##cwcasefun:{bf:case.}{it:myname}{bf:()}}}custom case function{p_end}
 {synoptline}
 
@@ -285,6 +287,7 @@
 {synopt :{helpb _cwfcn_labels_soc18:soc18}}2018 SOC labels{p_end}
 {synopt :{helpb _cwfcn_labels_soc10:soc10}}2010 SOC labels{p_end}
 {synopt :{helpb _cwfcn_labels_soc00:soc00}}2000 SOC labels{p_end}
+{synopt :{help crosswalk##addon:{it:addonlblset}}}label set provided by add-on package{p_end}
 {synopt :{help crosswalk##cwlblset:{it:myname}}}custom label set{p_end}
 {synoptline}
 
@@ -307,6 +310,15 @@
 
 {pstd}
     {cmd:crosswalk} supersedes command {helpb iscogen} (Jann 2019).
+
+{marker addon}{...}
+{pstd}
+    The following add-on package provides further crosswalk tables:
+
+{p2colset 9 31 33 2}{...}
+{p2col : {helpb kldbrecode} [{stata ssc install kldbrecode:{it:install}}]}Crosswalk
+    tables to translate German Classifications of Occupations
+    (KldB) (Gerhardt and Kappes 2025){p_end}
 
 
 {marker options}{...}
@@ -792,6 +804,10 @@ determining the destination column{p_end}
 {title:References}
 
 {phang}
+    Gerhardt, H., A. Kappes. 2025. kldbrecode: Stata module to translate KldB
+    codes. Available from {browse "https://github.com/hagerhardt/kldbrecode"}.
+    {p_end}
+{phang}
     Jann, B. 2005. moremata: Stata module (Mata) to provide various functions. Available
     from {browse "https://ideas.repec.org/c/boc/bocode/s455001.html"}.
     {p_end}
@@ -822,4 +838,4 @@ determining the destination column{p_end}
 {psee}
     Online:  help for
     {helpb recode}, {helpb label}, {helpb merge}, {helpb joinby},
-    {helpb moremata}
+    {helpb moremata}, {helpb kldbrecode} (if installed)

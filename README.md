@@ -24,6 +24,11 @@ on the system:
 
 Main changes:
 
+
+    15apr2025
+    - added to the documentation a reference to the -kldbrecode- add-on package
+      available from SSC
+
     version 1.0.4 12mar2025
     - OEP scales updated to version published on OSF on 2025-03-11
 

@@ -25,6 +25,10 @@ on the system:
 Main changes:
 
 
+    version 1.0.5  09sep2025
+    - crosswalk generated unwanted output if used with option duplicated(mean), 
+      duplicates(min), or duplicates(max); this is fixed
+
     15apr2025
     - added to the documentation a reference to the -kldbrecode- add-on package
       available from SSC

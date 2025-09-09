@@ -1,5 +1,5 @@
 {smcl}
-{* 15apr2025}{...}
+{* 08sep2025}{...}
 {viewerjumpto "Syntax" "crosswalk##syntax"}{...}
 {viewerjumpto "Description" "crosswalk##description"}{...}
 {viewerjumpto "Options" "crosswalk##options"}{...}
@@ -524,7 +524,7 @@ determining the destination column{p_end}
         end{txt}
 
 {pstd}
-    and then used the defined crosswalk table as follows:
+    and then use the defined crosswalk table as follows:
 
         {com}. crosswalk Y = myrecode(X), missing{txt}
 

@@ -1,4 +1,4 @@
-*! version 1.0.4  12mar2025  Ben Jann
+*! version 1.0.5  09sep2025  Ben Jann
 
 capt mata: assert(mm_version()>=200)
 if _rc==1 exit _rc
@@ -856,7 +856,6 @@ void _cw_nonunique_collapse(real scalar dupl, real colvector null,
         b = a - 1
         a = q[i]
         if (a==b) continue         // no match or no duplicates
-        a, b
         yi = select(Y[p[|a\b|]], !null[p[|a\b|]]) // use matched only
         if (!length(yi)) continue  // all non-matched
         Y[i] = (*f)(yi)            // note: p[a] is equal to i

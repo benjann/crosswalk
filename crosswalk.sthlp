@@ -1,5 +1,5 @@
 {smcl}
-{* 08sep2025}{...}
+{* 02dec2025}{...}
 {viewerjumpto "Syntax" "crosswalk##syntax"}{...}
 {viewerjumpto "Description" "crosswalk##description"}{...}
 {viewerjumpto "Options" "crosswalk##options"}{...}
@@ -172,6 +172,10 @@
 {marker fcn}{synopt :{it:fcn}()}Description{p_end}
 {synoptset 26 tabbed}{...}
 {synoptline}
+{syntab :Add-on}
+{synopt :{help crosswalk##addon:{it:addonfcn}{bf:()}}}crosswalk table provided by add-on package{p_end}
+{synopt :{help crosswalk##cwtable:{it:myname}{bf:()}}}custom crosswalk table{p_end}
+
 {syntab :Scales for ISCO-08}
 {synopt :{helpb _cwfcn_isco08_to_isei:isco08_to_isei()}}ISCO-08 to ISEI scores{p_end}
 {synopt :{helpb _cwfcn_isco08_to_iseisps:isco08_to_iseisps()}}alternative to {cmd:isco08_to_isei()}{p_end}
@@ -242,10 +246,6 @@
     {helpb _cwfcn_isco88_3_to_isco88_2:isco88_3_to_isco88_2()}{break}
     {helpb _cwfcn_isco88_3_to_isco88_1:isco88_3_to_isco88_1()}{break}
     {helpb _cwfcn_isco88_2_to_isco88_1:isco88_2_to_isco88_1()}{p_end}
-
-{syntab :Other}
-{synopt :{help crosswalk##addon:{it:addonfcn}{bf:()}}}crosswalk table provided by add-on package{p_end}
-{synopt :{help crosswalk##cwtable:{it:myname}{bf:()}}}custom crosswalk table{p_end}
 {synoptline}
 
 {synoptset 26}{...}
@@ -313,12 +313,18 @@
 
 {marker addon}{...}
 {pstd}
-    The following add-on package provides further crosswalk tables:
+    The following add-on packages provide further crosswalk tables:
 
 {p2colset 9 31 33 2}{...}
 {p2col : {helpb kldbrecode} [{stata ssc install kldbrecode:{it:install}}]}Crosswalk
     tables to translate German Classifications of Occupations
-    (KldB) (Gerhardt and Kappes 2025){p_end}
+    (KldB) ({browse "https://github.com/hagerhardt/kldbrecode":Gerhardt and Kappes 2025})
+    {p_end}
+{p2col : {helpb crosswalk_countries}}Crosswalk tables to translate country codes
+    ({browse "https://gitup.uni-potsdam.de/ukohler/crosswalk-countries":Kohler 2025}); see
+    {browse "https://gitup.uni-potsdam.de/ukohler/crosswalk-countries":here} for
+    installation instructions
+    {p_end}
 
 
 {marker options}{...}
@@ -814,6 +820,12 @@ determining the destination column{p_end}
 {phang}
     Jann, B. 2019. iscogen: Stata module to translate ISCO codes. Available from
     {browse "https://ideas.repec.org/c/boc/bocode/s458665.html"}.
+    {p_end}
+{phang}
+    Kohler, U. 2025. crosswalk-countries: Crosswalk tables to translate coding
+    systems for countries and to convolute countries to regions or
+    political entities. Available from
+    {browse "https://gitup.uni-potsdam.de/ukohler/crosswalk-countries"}.
     {p_end}
 
 

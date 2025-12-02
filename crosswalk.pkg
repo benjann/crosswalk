@@ -3,7 +3,7 @@ d crosswalk: module to recode variable based on crosswalk table (bulk recoding)
 d 
 d Author: Ben Jann, University of Bern, ben.jann@unibe.ch
 d
-d Distribution-Date: 20250909
+d Distribution-Date: 20251202
 f _cwcasefcn_egp.sthlp
 f _cwcasefcn_egp68.sthlp
 f _cwcasefcn_esec.sthlp

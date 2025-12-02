@@ -25,8 +25,12 @@ on the system:
 Main changes:
 
 
+    02dec2025
+    - added to the documentation a reference to the -crosswalk-countries- add-on
+      package by Uli Kohler
+
     version 1.0.5  09sep2025
-    - crosswalk generated unwanted output if used with option duplicated(mean), 
+    - crosswalk generated unwanted output if used with option duplicates(mean), 
       duplicates(min), or duplicates(max); this is fixed
 
     15apr2025

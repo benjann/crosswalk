@@ -25,6 +25,13 @@ on the system:
 Main changes:
 
 
+    version 1.0.6  04dec2025
+    - fcn(): syntax <prefix>.<basename>() is now supported to declare that <prefix>
+      in function <prefix>_<basename>() is a prefix; this has two consequences
+      1) crosswalk will look for prefixed labelsets 
+      2) crosswalk will use the link defined in file _cwlink_<prefix>.sthlp to
+         build automatic wrappers
+
     02dec2025
     - added to the documentation a reference to the -crosswalk-countries- add-on
       package by Uli Kohler

@@ -398,8 +398,8 @@
 {phang}
     {cmd:label(}[{it:lblset}][{cmd:,} {opt minimal}]{cmd:)} specifies a
     {help crosswalk##lblset:{it:lblset}} to be used for the value labels. By default,
-    when applying function {it:origin}{cmd:_to_}{it:destination}{cmd:()},
-    the {it:lblset} called {it:destination} will be used, if such a
+    when applying function [{it:prefix}{cmd:.}]{it:origin}{cmd:_to_}{it:destination}{cmd:()},
+    the {it:lblset} called [{it:prefix}{cmd:.}]{it:destination} will be used, if such a
     set exists. Suboption {cmd:minimal} requests that only values be labeled
     that exist in the data; the default is to include all defined
     labels. {cmd:label()} has no effect if the generated variable is
@@ -460,6 +460,7 @@
         {help crosswalk##cwtable:Custom crosswalk tables}
         {help crosswalk##cwcasefun:Custom case functions}
         {help crosswalk##cwlblset:Custom label sets}
+        {help crosswalk##pfx:Prefix syntax}
         {help crosswalk##manipulate:Manipulate existing crosswalk table}
 
 {marker case}{...}
@@ -630,9 +631,37 @@ determining the destination column{p_end}
         {com}. crosswalk Y = myrecode(X), missing label(myrecode){txt}
 
 {pstd}
-    Hint: Use name {cmd:labels_}{it:destination} if you want to provide labels that will be
-    picked up automatically by crosswalk table
-    {it:origin}{cmd:_to_}{it:destination}{cmd:()}.
+    Use name {cmd:labels_}{it:destination} if you want to
+    provide labels that will be picked up automatically by crosswalk table
+    {it:origin}{cmd:_to_}{it:destination}{cmd:()}. Likewise, use name
+    {cmd:labels_}{it:prefix}{cmd:_}{it:destination} if you want to
+    provide labels that will be picked up by crosswalk table
+    {it:prefix}{cmd:.}{it:origin}{cmd:_to_}{it:destination}{cmd:()}.
+
+{marker pfx}{...}
+{dlgtab:Prefix syntax}
+
+{pstd}
+    Function {it:prefix}{cmd:_}{it:origin}{cmd:_to_}{it:destination}{cmd:()}
+    can be typed as {it:prefix}{cmd:.}{it:origin}{cmd:_to_}{it:destination}{cmd:()}
+    to declare {it:prefix} as a prefix. This has the following consequences.
+
+{phang}
+    (1) {cmd:crosswalk} will look for labels called {it:prefix}{cmd:_}{it:destination}
+    rather than {it:destination}.
+
+{phang}
+    (2) {cmd:crosswalk} will look for file {cmd:_cwlink_}{it:prefix}{cmd:.sthlp}
+    and use the link declared in this file to construct automatic wrappers. File
+    {cmd:_cwlink_}{it:prefix}{cmd:.sthlp} must contain a single keyword providing
+    the name of the common link.
+
+{pmore}
+    For example, assume that there are functions {cmd:pfx_code1_to_code2()} and
+    {cmd:pfx_code2_to_code3()}, but not {cmd:pfx_code1_to_code3()}. If
+    there is file {cmd:_cwlink_pfx.sthlp} containing {cmd:code2}, you
+    can type {cmd:pfx.code1_to_code3()} to apply {cmd:pfx_code1_to_code2()}
+    followed by {cmd:pfx_code2_to_code3()}.
 
 {marker manipulate}{...}
 {dlgtab:Manipulate existing crosswalk table}
@@ -749,6 +778,7 @@ determining the destination column{p_end}
       Macros:
 {p2col : {cmd:r(fcn)}}name of applied {help crosswalk##fcn:{it:fcn}()}{p_end}
 {p2col : {cmd:r(fn)}}filename of applied {help crosswalk##fcn:{it:fcn}()} (empty if from memory){p_end}
+{p2col : {cmd:r(pfx)}}function prefix (if specified){p_end}
 {p2col : {cmd:r(lblset)}}name of applied {help crosswalk##lblset:{it:lblset}}{p_end}
 {p2col : {cmd:r(fn_lblset)}}filename of applied {help crosswalk##lblset:{it:lblset}} (empty if from memory){p_end}
 {p2col : {cmd:r(newvar)}}name of generated variable{p_end}

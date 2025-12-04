@@ -1,4 +1,4 @@
-*! version 1.0.5  09sep2025  Ben Jann
+*! version 1.0.6  04dec2025  Ben Jann
 
 capt mata: assert(mm_version()>=200)
 if _rc==1 exit _rc
@@ -83,6 +83,20 @@ program _crosswalk, rclass
     local str0 = (substr("`:type `xvar''",1,3)=="str")
     local case = strtrim(`"`case'"')
     
+    // get prefix and position of "_to_" (if specified)
+    local tmp = strpos(`"`fcn'"',".")
+    if (`tmp') {
+        local prefix = substr(`"`fcn'"',1,`tmp'-1)
+        local fcn    = substr(`"`fcn'"',`tmp'+1,.)
+        local posofto = strpos(`"`fcn'"',"_to_")
+        if `posofto' {
+            local posofto = `posofto' + strlen(`"`prefix'"') + 1
+        }
+        local fcn `"`prefix'_`fcn'"'
+    }
+    else local posofto = strpos(`"`fcn'"',"_to_")
+    if (strlen(`"`fcn'"')<(`posofto'+4)) local posofto 0
+    
     // rest of syntax
     syntax name(name=generate) [if] [in] [, Replace NOLabel Label(str)/*
         */ MISsing COPYrest COPYrest2(str) COPYMISsing COPYMISsing2(str)/*
@@ -142,8 +156,9 @@ program _crosswalk, rclass
         local label_user 1
     }
     else if "`string'"=="" {
-        if strpos(`"`fcn'"',"_to_") {
-            local label = substr(`"`fcn'"', strpos(`"`fcn'"',"_to_")+4,.)
+        if `posofto' {
+            local label = substr(`"`fcn'"',`posofto'+4,.)
+            if `"`prefix'"'!="" local label `"`prefix'_`label'"'
             capt mata: labels_find(st_local("label"))
             if _rc==1 exit 1
             if _rc local label // no labels found
@@ -183,8 +198,8 @@ program _crosswalk, rclass
     // translate
     tempvar newvar
     if "`out'"!="" tempvar OUT
-    mata: crosswalk(`"`fcn'"', `dupl', "`xvar'", "`CASE'",/*
-        */ "`newvar'", "`touse'", "`string'"!="", "`numeric'"!="",/*
+    mata: crosswalk(`"`fcn'"', `"`prefix'"', `posofto', `dupl', "`xvar'",/*
+        */ "`CASE'", "`newvar'", "`touse'", "`string'"!="", "`numeric'"!="",/*
         */ "`copyrest'"!="", "`noinfo'"!="", "`OUT'")
     local str1 = (substr("`:type `newvar''",1,3)=="str")
     if "`duplicates'"=="expand" {
@@ -271,6 +286,7 @@ program _crosswalk, rclass
     ret local newvar     `generate'
     ret local fn_lblset  `"`fn_lblset'"'
     ret local lblset     `"`label'"'
+    ret local pfx        `"`prefix'"'
     ret local fn         `"`fn'"'
     ret local fcn        `"`fcn'()"'
     ret scalar string    = `str1'
@@ -315,6 +331,7 @@ end
 
 program _parse_label
     syntax [anything] [, MINimal ]
+    local anything: subinstr local anything "." "_" // "pfx.name"=>"pfx_name"
     c_local label `"`anything'"'
     c_local label_minimal `minimal'
 end
@@ -403,6 +420,7 @@ end
 program _cw_label, rclass
     // syntax
     gettoken label 0 : 0, parse(", ")
+    local label: subinstr local label "." "_" // "pfx.name"=>"pfx_name"
     syntax [varlist(numeric default=none)] [, name(name) MODify MINimal ]
     if "`varlist'"=="" {
         local minimal
@@ -536,6 +554,7 @@ end
 
 program _parse_fcn
     gettoken nm 0 : 0
+    local 0: subinstr local 0 "." "_" // "pfx.name"=>"pfx_name"
     gettoken 0 rest : 0, parse("(")
     if `"`rest'"'!="" {
         gettoken args rest: rest, match(par)
@@ -550,29 +569,35 @@ version 14
 mata:
 mata set matastrict on
 
-void crosswalk(string scalar fcn, real scalar dupl, string scalar xvar,
-    string scalar CASE, string scalar newvar, string scalar touse,
-    real scalar str, real scalar num, real scalar copyrest,
-    real scalar noinfo, string scalar out)
+void crosswalk(string scalar fcn, string scalar pfx, real scalar posofto,
+    real scalar dupl, string scalar xvar, string scalar CASE,
+    string scalar newvar, string scalar touse, real scalar str,
+    real scalar num, real scalar copyrest, real scalar noinfo,
+    string scalar out)
 {
     real scalar            i, n, Cok, nobs, Nadd, nadd
     string scalar          fn
-    string colvector       T
     string matrix          F
     real colvector         C, null, id
     transmorphic colvector X, Y, FROM
     pointer scalar         d
-    transmorphic matrix    TO
+    transmorphic matrix    T, TO
     
     // load main translator
-    T = table_load(fcn, fn="") // fills in fn
-    st_local("fn", fn)
-    F = table_alias(T)
-    n = rows(F)
-    if (!n) {
-        F = (fcn, "")
-        n = 1
+    T = table_load(fcn, fn="", pfx!="") // fills in fn
+    if (T!=J(0,0,.)) {
+        F = table_alias(T)
+        n = rows(F)
+        if (!n) {
+            F = (fcn, "")
+            n = 1
+        }
     }
+    else { // only possible if pfx!=""
+        F = table_alias_build(fcn, pfx, posofto)
+        n = rows(F)
+    }
+    st_local("fn", fn)
     if (dupl<0) Nadd = 0 // (expand)
     // get data
     if (st_isstrvar(xvar)) st_sview(X="", ., xvar, touse)
@@ -1058,14 +1083,32 @@ string colvector data_to_table()
     return(T)
 }
 
-string colvector table_load(string scalar fcn, | string scalar fn)
+transmorphic matrix table_load(string scalar fcn, | string scalar fn,
+    real scalar relax)
 {
-    real scalar      i, r
-    real colvector   p
-    string scalar    s
-    string colvector T
+    transmorphic matrix T
     
+    if (args()<3) relax = 0
     T = _table_load(fcn, fn) // fills in fn
+    if (T==J(0,0,.)) {
+        if (relax) return(T) // not found
+        _table_notfound(fcn)
+    }
+    return(_table_clean(T))
+}
+
+void _table_notfound(string scalar fcn)
+{
+    errprintf("crosswalk table {bf:%s()} not found\n", fcn)
+    exit(111)
+}
+
+string matrix _table_clean(string matrix T)
+{
+    real scalar    i, r
+    real colvector p
+    string scalar  s
+    
     r = rows(T)
     p = J(r,1,0)
     for (i=1;i<=r;i++) {
@@ -1087,16 +1130,13 @@ string colvector table_load(string scalar fcn, | string scalar fn)
     else           return(J(0,1,""))
 }
 
-string colvector _table_load(string scalar fcn, string scalar fn)
-{
-    string colvector T
+transmorphic matrix _table_load(string scalar fcn, string scalar fn)
+{   // returns J(0,0,.) if table is not found
+    transmorphic matrix T
     
     T = _table_get(fcn)
     if (T!=J(0,0,.)) return(T)
-    T = _table_read(fcn, fn) // fills in fn
-    if (T!=J(0,0,.)) return(T)
-    errprintf("crosswalk table {bf:%s()} not found\n", fcn)
-    exit(111)
+    return(_table_read(fcn, fn)) // fills in fn
 }
 
 void table_define(string scalar nm)
@@ -1150,8 +1190,7 @@ string colvector table_get(string scalar fcn)
     
     T = _table_get(fcn)
     if (T!=J(0,0,.)) return(T)
-    errprintf("crosswalk table {bf:%s()} not found\n", fcn)
-    exit(111)
+    _table_notfound(fcn)
 }
 
 transmorphic matrix _table_get(string scalar nm)
@@ -1229,6 +1268,56 @@ string matrix table_alias(string colvector T)
         F[i,] = (substr(s,2,.), ocol)
     }
     return(select(F, F[,1]:!=""))
+}
+
+string matrix table_alias_build(string scalar fcn, string scalar pfx,
+    real scalar posofto)
+{
+    string scalar lnk, orig, dest
+    
+    if (!posofto) _table_notfound(fcn) // fcn not <origin>_to_<destination>
+    lnk  = _table_alias_build_lnk(fcn, pfx) // get link
+    orig = substr(substr(fcn, 1, posofto-1), strlen(pfx)+2, .)
+    dest = substr(fcn, posofto+4, .)
+    return(_table_alias_build(fcn, pfx + "_" + orig + "_to_" + lnk) \
+           _table_alias_build(fcn, pfx + "_" + lnk + "_to_" + dest))
+}
+
+string matrix _table_alias_build(string scalar fcn, string scalar fcn2)
+{
+    string matrix       F
+    transmorphic matrix T
+    
+    T = table_load(fcn2, "", 1)
+    if (T==J(0,0,.)) {
+        errprintf("cannot build wrapper for {bf:%s()}\n", fcn)
+        _table_notfound(fcn2)
+    }
+    F = table_alias(T)
+    if (!rows(F)) F = (fcn2, "") // fcn2 is not an alias list
+    return(F)
+}
+
+string scalar _table_alias_build_lnk(string scalar fcn, string scalar pfx)
+{
+    string scalar fn, lnk
+    string matrix T
+    
+    lnk = ""
+    fn = findfile("_cwlink_" + pfx + ".sthlp")
+    if (fn!="") {
+        T = _table_clean(cat(fn))
+        if (length(T)==1) {
+            T = tokens(T)
+            if (length(T)==1) lnk = strtrim(T)
+        }
+    }
+    if (length(tokens(lnk))!=1) {
+        errprintf("cannot build wrapper for {bf:%s()}\n", fcn)
+        errprintf("{bf:%s} not found or invalid\n", "_cwlink_" + pfx + ".sthlp")
+        exit(111)
+    }
+    return(lnk)
 }
 
 void table_parse(string colvector T, string colvector FROM, string matrix TO,

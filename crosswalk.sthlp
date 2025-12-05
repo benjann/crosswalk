@@ -1,5 +1,7 @@
 {smcl}
-{* 02dec2025}{...}
+{* 05dec2025}{...}
+{vieweralsosee "crosswalk_countries" "help crosswalk_countries"}{...}
+{vieweralsosee "kldbrecode" "help kldbrecode"}{...}
 {viewerjumpto "Syntax" "crosswalk##syntax"}{...}
 {viewerjumpto "Description" "crosswalk##description"}{...}
 {viewerjumpto "Options" "crosswalk##options"}{...}
@@ -779,6 +781,7 @@ determining the destination column{p_end}
 {p2col : {cmd:r(fcn)}}name of applied {help crosswalk##fcn:{it:fcn}()}{p_end}
 {p2col : {cmd:r(fn)}}filename of applied {help crosswalk##fcn:{it:fcn}()} (empty if from memory){p_end}
 {p2col : {cmd:r(pfx)}}function prefix (if specified){p_end}
+{p2col : {cmd:r(lnk)}}name of link in case of automatic wrapper{p_end}
 {p2col : {cmd:r(lblset)}}name of applied {help crosswalk##lblset:{it:lblset}}{p_end}
 {p2col : {cmd:r(fn_lblset)}}filename of applied {help crosswalk##lblset:{it:lblset}} (empty if from memory){p_end}
 {p2col : {cmd:r(newvar)}}name of generated variable{p_end}
@@ -880,4 +883,4 @@ determining the destination column{p_end}
 {psee}
     Online:  help for
     {helpb recode}, {helpb label}, {helpb merge}, {helpb joinby},
-    {helpb moremata}, {helpb kldbrecode} (if installed)
+    {helpb moremata}, {helpb kldbrecode} (if installed), {helpb crosswalk_countries} (if installed)

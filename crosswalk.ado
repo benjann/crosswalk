@@ -1,4 +1,4 @@
-*! version 1.0.6  04dec2025  Ben Jann
+*! version 1.0.7  05dec2025  Ben Jann
 
 capt mata: assert(mm_version()>=200)
 if _rc==1 exit _rc
@@ -84,6 +84,7 @@ program _crosswalk, rclass
     local case = strtrim(`"`case'"')
     
     // get prefix and position of "_to_" (if specified)
+    local lnk
     local tmp = strpos(`"`fcn'"',".")
     if (`tmp') {
         local prefix = substr(`"`fcn'"',1,`tmp'-1)
@@ -286,6 +287,7 @@ program _crosswalk, rclass
     ret local newvar     `generate'
     ret local fn_lblset  `"`fn_lblset'"'
     ret local lblset     `"`label'"'
+    ret local lnk        `"`lnk'"'
     ret local pfx        `"`prefix'"'
     ret local fn         `"`fn'"'
     ret local fcn        `"`fcn'()"'
@@ -1277,6 +1279,7 @@ string matrix table_alias_build(string scalar fcn, string scalar pfx,
     
     if (!posofto) _table_notfound(fcn) // fcn not <origin>_to_<destination>
     lnk  = _table_alias_build_lnk(fcn, pfx) // get link
+    st_local("lnk", lnk)
     orig = substr(substr(fcn, 1, posofto-1), strlen(pfx)+2, .)
     dest = substr(fcn, posofto+4, .)
     return(_table_alias_build(fcn, pfx + "_" + orig + "_to_" + lnk) \

@@ -24,6 +24,8 @@ on the system:
 
 Main changes:
 
+    version 1.0.7  05dec2025
+    - in case of an automatic wrapper, crosswalk now returns the link name in r(lnk)
 
     version 1.0.6  04dec2025
     - fcn(): syntax <prefix>.<basename>() is now supported to declare that <prefix>

@@ -24,6 +24,10 @@ on the system:
 
 Main changes:
 
+    01oct2026
+    - added to the documentation a reference to the -crosswalk_multiclass- add-on
+      package by Oscar Smallenbroek
+
     version 1.0.8  20jun2026
     - syntax is now -crosswalk [generate] newvar = ....-, i.e. can optionally
       type subcommand -generate-

@@ -24,6 +24,10 @@ on the system:
 
 Main changes:
 
+    version 1.0.8  20jun2026
+    - syntax is now -crosswalk [generate] newvar = ....-, i.e. can optionally
+      type subcommand -generate-
+
     version 1.0.7  05dec2025
     - in case of an automatic wrapper, crosswalk now returns the link name in r(lnk)
 

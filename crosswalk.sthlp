@@ -1,7 +1,8 @@
 {smcl}
-{* 05dec2025}{...}
-{vieweralsosee "crosswalk_countries" "help crosswalk_countries"}{...}
+{* 01oct2026}{...}
+{vieweralsosee "crosswalk_multiclass" "help crosswalk_multiclass"}{...}
 {vieweralsosee "kldbrecode" "help kldbrecode"}{...}
+{vieweralsosee "crosswalk_countries" "help crosswalk_countries"}{...}
 {viewerjumpto "Syntax" "crosswalk##syntax"}{...}
 {viewerjumpto "Description" "crosswalk##description"}{...}
 {viewerjumpto "Options" "crosswalk##options"}{...}
@@ -27,7 +28,7 @@
     Main command: recode a variable using {it:fcn}{cmd:()}
 
 {p 8 15 2}
-    {cmd:crosswalk} {newvar} {cmd:=}
+    {cmd:crosswalk} [{cmdab:g:enerate}] {newvar} {cmd:=}
     {help crosswalk##fcn:{it:fcn}}{cmd:(}{it:varname} [{help crosswalk##case:{it:case}}]{cmd:)}
     {ifin} [{cmd:,} {help crosswalk##opt:{it:options}} ]
 
@@ -38,7 +39,7 @@
     Generate {help crosswalk##case:{it:case}} indicator
 
 {p 8 15 2}
-    {cmd:crosswalk} {newvar} {cmd:=}
+    {cmd:crosswalk} [{cmdab:g:enerate}] {newvar} {cmd:=}
     {help crosswalk##casefcn:{it:casefcn}}{cmd:(}{it:arguments}{cmd:)} {ifin}
     [{cmd:,} {opt r:eplace} ]
 
@@ -317,7 +318,12 @@
 {pstd}
     The following add-on packages provide further crosswalk tables:
 
-{p2colset 9 31 33 2}{...}
+{p2colset 9 40 42 2}{...}
+{p2col : {helpb crosswalk_multiclass} [{stata ssc install crosswalk_multiclass:{it:install}}]}Crosswalk
+    tables to translate ISCO-88com and ISCO-08 into the Multilevel
+    Socio-Economic Classes schemes
+    ({browse "https://github.com/OscarSmallenbroek/crosswalk_multiclass":Smallenbroek 2026})
+    {p_end}
 {p2col : {helpb kldbrecode} [{stata ssc install kldbrecode:{it:install}}]}Crosswalk
     tables to translate German Classifications of Occupations
     (KldB) ({browse "https://github.com/hagerhardt/kldbrecode":Gerhardt and Kappes 2025})
@@ -501,7 +507,7 @@ determining the destination column{p_end}
 {p 8 8 2}
 . {cmd:crosswalk} {cmd:egpcase =} {cmd:case.egp(}{it:sempl} {it:supvis}{cmd:)}{p_end}
 {p 8 8 2}
-. {cmd:crosswalk} {it:newvar} {cmd:=} {cmd:isco88_to_egp(}{it:varname} {cmd:egpcase))}
+. {cmd:crosswalk} {it:newvar} {cmd:=} {cmd:isco88_to_egp(}{it:varname} {cmd:egpcase)}
 
 {pstd}
     or, equivalently, in
@@ -676,7 +682,7 @@ determining the destination column{p_end}
     or minor groups (i.e., 1, 2, or 3-digits codes padded with zeros on the
     right), because sometimes there is not enough information to code an
     observation at the unit-group level. When applying {cmd:ilo_isco08_to_isco88()}
-    these codes will be left without match. An approach to solve this issue, is to take
+    these codes will be left without match. An approach to solve this issue is to take
     the original crosswalk table, truncate all origin and destination codes to
     3 digits, remove duplicates, and then add a trailing zero back in to each
     code. The resulting table assigns one or several ISCO-88 minor groups to
@@ -843,8 +849,9 @@ determining the destination column{p_end}
 {title:References}
 
 {phang}
-    Gerhardt, H., A. Kappes. 2025. kldbrecode: Stata module to translate KldB
-    codes. Available from {browse "https://github.com/hagerhardt/kldbrecode"}.
+    Gerhardt, H., A. Kappes. 2025. kldbrecode: Stata module that provides
+    crosswalk tables for translations between German KldB and ISCO. Available
+    from {browse "https://ideas.repec.org/c/boc/bocode/s459442.html"}.
     {p_end}
 {phang}
     Jann, B. 2005. moremata: Stata module (Mata) to provide various functions. Available
@@ -859,6 +866,11 @@ determining the destination column{p_end}
     systems for countries and to convolute countries to regions or
     political entities. Available from
     {browse "https://gitup.uni-potsdam.de/ukohler/crosswalk-countries"}.
+    {p_end}
+{phang}
+    Smallenbroek, O. 2026. crosswalk_multiclass: Stata module to provide crosswalk
+    tables to translate ISCO-88com and ISCO-08 into the Multilevel Socio-Economic
+    Classes schemes. Available from {browse "https://ideas.repec.org/c/boc/bocode/s459876.html"}.
     {p_end}
 
 
@@ -883,4 +895,5 @@ determining the destination column{p_end}
 {psee}
     Online:  help for
     {helpb recode}, {helpb label}, {helpb merge}, {helpb joinby},
-    {helpb moremata}, {helpb kldbrecode} (if installed), {helpb crosswalk_countries} (if installed)
+    {helpb moremata}, {helpb crosswalk_multiclass} (if installed),
+    {helpb kldbrecode} (if installed), {helpb crosswalk_countries} (if installed)

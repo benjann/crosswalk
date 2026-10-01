@@ -1,4 +1,4 @@
-*! version 1.0.7  05dec2025  Ben Jann
+*! version 1.0.8  20jun2026  Ben Jann
 
 capt mata: assert(mm_version()>=200)
 if _rc==1 exit _rc
@@ -57,6 +57,12 @@ program crosswalk
             _cw_export `rest'
             exit
         }
+    }
+    
+    // allow -crosswalk generate ...-
+    gettoken subcmd : lhs
+    if `"`subcmd'"'==substr("generate", 1, max(1, strlen(`"`subcmd'"'))) {
+        gettoken subcmd lhs : lhs
     }
     
     // redirect to _cw_case if relevant
